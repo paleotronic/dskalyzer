@@ -8,3 +8,5 @@ DSKalyzer works by first “ingesting” your disk(s), creating an index contain
 Once you've identified a search you can also extract selected files. DSKalyzer can report to standard output (terminal), to a text file, or to a CSV file.
 
 Supports DOS, ProDOS, RDOS and Pascal, 140K-800K disks (DSK, PO, DO) and variable-sized 2MG files (including .ZIPped). Runs on MacOS X, Windows and Linux. (Source code is also available.)
+
+http://octalyzer.com/dskalyzer
