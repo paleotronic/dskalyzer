@@ -7,6 +7,8 @@ PUBLISH="publish"
 mkdir -p "$BINDIR"
 mkdir -p "$PUBLISH"
 
+go get github.com/chzyer/readline
+
 exitState=0
 for arch in `echo $ARCHES`; do
 	export GOOS=`echo $arch | awk -F"-" '{print $1}'`
