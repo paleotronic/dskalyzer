@@ -9,6 +9,6 @@ Once you've identified a search you can also extract selected files. DSKalyzer c
 
 Supports DOS, ProDOS, RDOS and Pascal (READ); DOS, Prodos (WRITE); 140K-800K disks (DSK, PO, DO) and variable-sized 2MG files. Runs on MacOS X, Windows and Linux; i386, amd64 and ARM. 
 
-Run without flags for interactive shell. Run with the -h or -help flag for list of flags. More documentation coming soon!
+Run without flags for interactive shell (currently supports most common disk management tasks). Run with the -h or -help flag for list of flags (for advanced searching and comparison features). More documentation coming soon!
 
 http://octalyzer.com/dskalyzer
