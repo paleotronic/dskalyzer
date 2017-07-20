@@ -13,4 +13,6 @@ Run without flags for interactive shell (currently supports most common disk man
 
 THIS IS ALPHA SOFTWARE. PLEASE ENSURE YOU HAVE A BACKUP OF ALL DISKS YOU SCAN / MODIFY WITH DSKALYZER!
 
-http://octalyzer.com/dskalyzer
+Binaries are available in the Releases tab https://github.com/paleotronic/dskalyzer/releases
+
+Website: http://octalyzer.com/dskalyzer
