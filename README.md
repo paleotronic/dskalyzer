@@ -11,4 +11,6 @@ Supports DOS, ProDOS, RDOS and Pascal (READ); DOS, Prodos (WRITE); 140K-800K dis
 
 Run without flags for interactive shell (currently supports most common disk management tasks). Run with the -h or -help flag for list of flags (for advanced searching and comparison features). More documentation coming soon!
 
+THIS IS ALPHA SOFTWARE. PLEASE ENSURE YOU HAVE A BACKUP OF ALL DISKS YOU SCAN / MODIFY WITH DSKALYZER!
+
 http://octalyzer.com/dskalyzer
