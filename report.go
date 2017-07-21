@@ -210,29 +210,29 @@ func (dfc *DuplicateActiveSectorDiskCollection) Report(filename string) {
 			original := list[0]
 			dupes := list[1:]
 
-			w.WriteString("")
-			w.WriteString("--------------------------------------")
+			w.WriteString("\n")
+			w.WriteString("--------------------------------------\n")
 			w.WriteString(fmt.Sprintf("Volume       : %s\n", original.Fullpath))
 			w.WriteString(fmt.Sprintf("Active SHA256: %s\n", sha256))
 			w.WriteString(fmt.Sprintf("Global SHA256: %s\n", original.GSHA))
 			w.WriteString(fmt.Sprintf("# Duplicates : %d\n", len(dupes)))
 			for i, v := range dupes {
-				w.WriteString("")
+				w.WriteString("\n")
 				w.WriteString(fmt.Sprintf(" Duplicate #%d\n", i+1))
 				w.WriteString(fmt.Sprintf(" = Volume       : %s\n", v.Fullpath))
 				w.WriteString(fmt.Sprintf(" = Active SHA256: %s\n", sha256))
 				w.WriteString(fmt.Sprintf(" = Global SHA256: %s\n", v.GSHA))
 				extras++
 			}
-			w.WriteString("")
+			w.WriteString("\n")
 
 		}
 
 	}
 
-	w.WriteString("")
-	w.WriteString("SUMMARY")
-	w.WriteString("=======")
+	w.WriteString("\n")
+	w.WriteString("SUMMARY\n")
+	w.WriteString("=======\n")
 	w.WriteString(fmt.Sprintf("Total disks which have duplicates: %d\n", disksWithDupes))
 	w.WriteString(fmt.Sprintf("Total redundant copies found     : %d\n", extras))
 
