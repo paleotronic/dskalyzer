@@ -359,22 +359,24 @@ func fileDupeReport(filter []string) {
 
 func wholeDupeReport(filter []string) {
 
+	dfc := &DuplicateWholeDiskCollection{}
+	Aggregate(AggregateDuplicateWholeDisks, dfc, filter)
+
 	fmt.Println("DUPLICATE WHOLE DISK REPORT")
 	fmt.Println()
 
-	dfc := &DuplicateWholeDiskCollection{}
-	Aggregate(AggregateDuplicateWholeDisks, dfc, filter)
 	dfc.Report(*reportFile)
 
 }
 
 func activeDupeReport(filter []string) {
 
+	dfc := &DuplicateActiveSectorDiskCollection{}
+	Aggregate(AggregateDuplicateActiveSectorDisks, dfc, filter)
+
 	fmt.Println("DUPLICATE ACTIVE SECTORS DISK REPORT")
 	fmt.Println()
 
-	dfc := &DuplicateActiveSectorDiskCollection{}
-	Aggregate(AggregateDuplicateActiveSectorDisks, dfc, filter)
 	dfc.Report(*reportFile)
 
 }

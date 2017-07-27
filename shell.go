@@ -81,7 +81,7 @@ func smartSplit(line string) (string, []string) {
 				add()
 			}
 			lastEscape = false
-		case ch == '\\':
+		case ch == '\\' && !inqq:
 			lastEscape = true
 		default:
 			chunk += string(ch)
@@ -128,6 +128,7 @@ const (
 	sccLocal
 	sccDiskFile
 	sccCommand
+	sccReportName
 	sccAnyFile = sccDiskFile | sccLocal
 	sccAny     = sccAnyFile | sccCommand
 )
@@ -537,6 +538,23 @@ func init() {
 				"rename <filename> <new filename>",
 				"",
 				"Rename a file on a disk.",
+			},
+		},
+		"report": &shellCommand{
+			Name:        "report",
+			Description: "Run a report",
+			MinArgs:     1,
+			MaxArgs:     999,
+			Code:        shellReport,
+			NeedsMount:  false,
+			Context:     sccDiskFile,
+			Text: []string{
+				"report <name> [<path>]",
+				"",
+				"Reports:",
+				"as-dupes       Active sector dupes report (-as-dupes at command line)",
+				"file-dupes     File dupes report (-file-dupes at command line)",
+				"whole-dupes    Whole disk dupes report (-whole-dupes at command line)",
 			},
 		},
 	}
@@ -1458,5 +1476,20 @@ func globDisk(slotid int, pattern string) ([]*DiskFile, error) {
 	}
 
 	return files, nil
+
+}
+
+func shellReport(args []string) int {
+
+	switch args[0] {
+	case "as-dupes":
+		activeDupeReport(args[1:])
+	case "file-dupes":
+		fileDupeReport(args[1:])
+	case "whole-dupes":
+		wholeDupeReport(args[1:])
+	}
+
+	return -1
 
 }

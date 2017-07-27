@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -168,10 +169,19 @@ func resolvePathfilters(base string, pathfilter []string, pattern string) []*reg
 	var out []*regexp.Regexp
 	for _, p := range pathfilter {
 
+		if runtime.GOOS == "windows" {
+			//p = strings.Replace(p, ":", "", -1)
+			p = strings.Replace(p, "\\", "/", -1)
+		}
+
+		//fmt.Printf("Stat [%s]\n", p)
+
 		p, e := filepath.Abs(p)
 		if e != nil {
 			continue
 		}
+
+		//fmt.Printf("OK\n")
 
 		// path is okay and now absolute
 		info, e := os.Stat(p)
@@ -179,15 +189,22 @@ func resolvePathfilters(base string, pathfilter []string, pattern string) []*reg
 			continue
 		}
 
+		if runtime.GOOS == "windows" {
+			p = strings.Replace(p, ":", "", -1)
+			p = strings.Replace(p, "\\", "/", -1)
+		}
+
 		var realpath string
 		if info.IsDir() {
-			realpath = base + "/" + strings.Trim(p, "/") + "/" + tmp
+			realpath = strings.Replace(base, "\\", "/", -1) + "/" + strings.Trim(p, "/") + "/" + tmp
 		} else {
 			// file
 			b := strings.Trim(filepath.Base(p), " /")
 			s := md5.Sum([]byte(b))
-			realpath = base + "/" + strings.Trim(filepath.Dir(p), "/") + "/.+_.+_.+_" + hex.EncodeToString(s[:]) + "[.]fgp$"
+			realpath = strings.Replace(base, "\\", "/", -1) + "/" + strings.Trim(filepath.Dir(p), "/") + "/.+_.+_.+_" + hex.EncodeToString(s[:]) + "[.]fgp$"
 		}
+
+		//fmt.Printf("Regexp [%s]\n", realpath)
 
 		out = append(out, regexp.MustCompile(realpath))
 
@@ -233,7 +250,13 @@ func existsPattern(base string, filters []string, pattern string) (bool, []strin
 	if len(fexp) > 0 {
 		out2 := make([]string, 0)
 		for _, p := range out {
+
+			if runtime.GOOS == "windows" {
+				p = strings.Replace(p, "\\", "/", -1)
+			}
+
 			for _, rxp := range fexp {
+				//fmt.Printf("Match [%s]\n", p)
 				if rxp.MatchString(p) {
 					out2 = append(out2, p)
 					//fmt.Printf("Match regexp: %s\n", p)
