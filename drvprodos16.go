@@ -122,7 +122,11 @@ func analyzePRODOS16(id int, dsk *disk.DSKWrapper, info *Disk) {
 	exists := exists(*baseName + "/" + info.GetFilename())
 
 	if !exists || *forceIngest {
-		info.WriteToFile(*baseName + "/" + info.GetFilename())
+		e := info.WriteToFile(*baseName + "/" + info.GetFilename())
+		if e != nil {
+			l.Errorf("Error writing fingerprint: %v", e)
+			panic(e)
+		}
 	} else {
 		l.Log("Not writing as it already exists")
 	}
@@ -183,14 +187,17 @@ func prodosDir(id int, start int, path string, dsk *disk.DSKWrapper, info *Disk)
 						file.Text = disk.ApplesoftDetoks(data)
 						file.TypeCode = TypeMask_ProDOS | TypeCode(fd.Type())
 						file.Data = data
+						file.LoadAddress = fd.AuxType()
 					} else if fd.Type() == disk.FileType_PD_INT {
 						file.Text = disk.IntegerDetoks(data)
 						file.TypeCode = TypeMask_ProDOS | TypeCode(fd.Type())
 						file.Data = data
+						file.LoadAddress = fd.AuxType()
 					} else if fd.Type() == disk.FileType_PD_TXT {
 						file.Text = disk.StripText(data)
 						file.Data = data
 						file.TypeCode = TypeMask_ProDOS | TypeCode(fd.Type())
+						file.LoadAddress = fd.AuxType()
 					} else {
 						file.LoadAddress = fd.AuxType()
 						file.Data = data

@@ -2,11 +2,10 @@ package disk
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
-
-	"fmt"
 )
 
 type VDH struct {
@@ -39,8 +38,8 @@ func (fd *VDH) SetData(data []byte, blockid, blockoffset int) {
 
 	if fd.Data == nil && len(data) == 39 {
 		fd.Data = data
-		fmt.Println("VDH: ")
-		Dump(data)
+		//Println("VDH: ")
+		//Dump(data)
 	}
 
 	for i, v := range data {
@@ -156,6 +155,11 @@ func (fd *VDH) GetTotalBlocks() int {
 	return int(fd.Data[37]) + 256*int(fd.Data[38])
 }
 
+func (fd *VDH) SetTotalBlocks(b int) {
+	fd.Data[37] = byte(b % 256)
+	fd.Data[38] = byte(b / 256)
+}
+
 func (fd *VDH) GetDirParentPointer() int {
 	return int(fd.Data[35]) + 256*int(fd.Data[35])
 }
@@ -189,6 +193,10 @@ func (fd *VDH) Publish(dsk *DSKWrapper) error {
 	for i, v := range fd.Data {
 		bd[fd.blockoffset+i] = v
 	}
+	fmt.Printf("Writing dir header at block %d\n", fd.blockid)
+
+	fmt.Printf("Data=%v\n", bd)
+
 	return dsk.PRODOSWrite(fd.blockid, bd)
 }
 
@@ -722,7 +730,7 @@ func (ft ProDOSFileType) Ext() string {
 		return info[0]
 	}
 
-	return "UNK"
+	return "BIN"
 }
 
 func ProDOSFileTypeFromExt(ext string) ProDOSFileType {
@@ -731,7 +739,7 @@ func ProDOSFileTypeFromExt(ext string) ProDOSFileType {
 			return ft
 		}
 	}
-	return 0x00
+	return 0x06
 }
 
 func (t ProDOSFileType) Valid() bool {
@@ -876,7 +884,7 @@ func (d *DSKWrapper) PRODOSGetVDH(b int) (*VDH, error) {
 func (d *DSKWrapper) PRODOSGetCatalogPathed(start int, path string, pattern string) (*VDH, []ProDOSFileDescriptor, error) {
 
 	path = strings.Trim(path, "/")
-	fmt.Printf("PRODOSGetCatalogPathed(%d, \"%s\", \"%s\" )\n", start, path, pattern)
+	//fmt.Printf("PRODOSGetCatalogPathed(%d, \"%s\", \"%s\" )\n", start, path, pattern)
 
 	//start := 2 // where we start our descent
 
@@ -901,12 +909,12 @@ func (d *DSKWrapper) PRODOSGetCatalogPathed(start int, path string, pattern stri
 		// ok, we found the directory...
 		if len(parts) > 0 {
 			// more subdirs
-			fmt.Printf(">> Entering prodos subdir [%s]\n", files[0].Name())
+			//fmt.Printf(">> Entering prodos subdir [%s]\n", files[0].Name())
 			newpathstr := strings.Join(parts, "/")
 			return d.PRODOSGetCatalogPathed(files[0].IndexBlock(), newpathstr, pattern)
 		} else {
 			// get directory based on this block
-			fmt.Printf("-- Entering prodos subdir [%s]\n", files[0].Name())
+			//fmt.Printf("-- Entering prodos subdir [%s]\n", files[0].Name())
 			return d.PRODOSGetCatalog(files[0].IndexBlock(), pattern)
 		}
 
@@ -918,7 +926,7 @@ func (d *DSKWrapper) PRODOSGetCatalogPathed(start int, path string, pattern stri
 
 func (d *DSKWrapper) PRODOSGetCatalog(startblock int, pattern string) (*VDH, []ProDOSFileDescriptor, error) {
 
-	fmt.Printf("GetCatalogProDOS(%d, %s)\n", startblock, pattern)
+	//fmt.Printf("GetCatalogProDOS(%d, %s)\n", startblock, pattern)
 
 	var err error
 	var re *regexp.Regexp
@@ -958,7 +966,7 @@ func (d *DSKWrapper) PRODOSGetCatalog(startblock int, pattern string) (*VDH, []P
 
 	nextblock := int(data[2]) + 256*int(data[3])
 
-	fmt.Printf("ActiveCount = %d\n", filecount)
+	//fmt.Printf("ActiveCount = %d\n", filecount)
 
 	entrypointer := 4 + PRODOS_ENTRY_SIZE
 
@@ -974,7 +982,7 @@ func (d *DSKWrapper) PRODOSGetCatalog(startblock int, pattern string) (*VDH, []P
 
 				var skipname bool = false
 				if re != nil {
-					fmt.Printf("Checking [%s] against regex /%s/\n", fd.Name(), patterntmp)
+					//fmt.Printf("Checking [%s] against regex /%s/\n", fd.Name(), patterntmp)
 					skipname = !re.MatchString(fd.Name())
 				}
 
@@ -1042,7 +1050,7 @@ func (d *DSKWrapper) PRODOSReadFileSectors(fd ProDOSFileDescriptor, maxblocks in
 		for len(data) < fd.Size() && bptr+256 < len(index) {
 			blocknum := int(index[bptr]) + 256*int(index[bptr+256])
 
-			fmt.Printf("File block %d (%d %d)\n", blocknum, int(index[bptr]), int(index[bptr+1]))
+			//fmt.Printf("File block %d (%d %d)\n", blocknum, int(index[bptr]), int(index[bptr+1]))
 
 			if d.Format.ID == DF_PRODOS_800KB {
 				chunk, e = d.PRODOS800GetBlock(blocknum)
@@ -1263,12 +1271,12 @@ func (dsk *DSKWrapper) PRODOSGetFirstFreeEntry(path string, name string, grow bo
 			fd.SetData(chunk, blockList[idx], offset)
 			fd.entryNum = entries
 
-			fmt.Printf("--> Check entry: %s, %v, %v\n", fd.NameUnadorned(), fd.CreateTime(), fd.ModTime())
+			//Printf("--> Check entry: %s, %v, %v\n", fd.NameUnadorned(), fd.CreateTime(), fd.ModTime())
 
 			if fd.GetStorageType() != 0x00 && strings.ToLower(fd.NameUnadorned()) == strings.ToLower(name) {
 				return fd, nil
 			} else if fd.GetStorageType() == 0x00 {
-				fmt.Printf("found at entry %d in block %d\n", entries, blockList[idx])
+				//fmt.Printf("found at entry %d in block %d\n", entries, blockList[idx])
 				return fd, nil
 			}
 
@@ -1313,7 +1321,7 @@ func (dsk *DSKWrapper) PRODOSMarkBlocks(list []int, free bool) error {
 		vbm.SetBlockFree(b, free)
 	}
 
-	fmt.Printf("Writing Volume bitmap to block %d\n", vbm.blockid)
+	//fmt.Printf("Writing Volume bitmap to block %d\n", vbm.blockid)
 
 	return dsk.PRODOSWrite(vbm.blockid, vbm.Data)
 }
@@ -1345,8 +1353,6 @@ func (dsk *DSKWrapper) PRODOSGetFreeBlocks(count int, totalBlocks int) ([]int, e
 
 func (dsk *DSKWrapper) PRODOSDeleteFile(path string, name string) error {
 
-	// We cheat here a bit and use the get first free entry call with
-	// autogrow turned off.
 	fd, err := dsk.PRODOSGetNamedEntry(path, name)
 	if err != nil {
 		return err
@@ -1383,11 +1389,12 @@ func (dsk *DSKWrapper) PRODOSDeleteFile(path string, name string) error {
 		if err != nil {
 			return err
 		}
-		for i := 0; i < 256; i++ {
-			b := int(ib[2*i+0]) + 256*int(ib[2*i+1])
-			if b != 0 {
-				removeBlocks = append(removeBlocks, b)
-			}
+
+		i := 0
+		b := int(ib[2*i+0]) + 256*int(ib[2*i+1])
+		for i < 256 && b != 0 {
+			b = int(ib[2*i+0]) + 256*int(ib[2*i+1])
+			i++
 		}
 	}
 
@@ -1396,7 +1403,7 @@ func (dsk *DSKWrapper) PRODOSDeleteFile(path string, name string) error {
 		return err
 	}
 
-	// get the VDH -- we need this later
+	// // get the VDH -- we need this later
 	vdh, _, _, err := dsk.PRODOSFindDirBlocks(2, path)
 	if err != nil {
 		return err
@@ -1411,11 +1418,14 @@ func (dsk *DSKWrapper) PRODOSDeleteFile(path string, name string) error {
 
 	// update filecount
 	vdh.SetFileCount(vdh.GetFileCount() - 1)
+
 	return vdh.Publish(dsk)
 
 }
 
 func (dsk *DSKWrapper) PRODOSWriteFile(path string, name string, kind ProDOSFileType, data []byte, auxtype int) error {
+
+	name = strings.ToUpper(name)
 
 	nst := StorageType_Seedling
 	blocksNeeded := len(data)/512 + 1
@@ -1464,7 +1474,7 @@ func (dsk *DSKWrapper) PRODOSWriteFile(path string, name string, kind ProDOSFile
 			return err
 		}
 	case StorageType_Seedling:
-		fmt.Printf("Write Seedling %d bytes data to block %d\n", len(data), freeBlocks[0])
+		//fmt.Printf("Write Seedling %d bytes data to block %d\n", len(data), freeBlocks[0])
 		err = dsk.PRODOSWrite(freeBlocks[0], data)
 		if err != nil {
 			return err
@@ -1513,7 +1523,7 @@ func (dsk *DSKWrapper) PRODOSWriteFile(path string, name string, kind ProDOSFile
 
 func (fd *ProDOSFileDescriptor) Publish(dsk *DSKWrapper) error {
 
-	fmt.Printf("Writing FD data back to block %d, offset %d\n", fd.blockid, fd.blockoffset)
+	//fmt.Printf("Writing FD data back to block %d, offset %d\n", fd.blockid, fd.blockoffset)
 
 	bd, err := dsk.PRODOSGetBlock(fd.blockid)
 	if err != nil {
@@ -1526,7 +1536,7 @@ func (fd *ProDOSFileDescriptor) Publish(dsk *DSKWrapper) error {
 	// 	bd[i] = byte(0xff ^ (i % 2))
 	// }
 
-	Dump(bd)
+	//Dump(bd)
 
 	return dsk.PRODOSWrite(fd.blockid, bd)
 }
@@ -1536,9 +1546,6 @@ func (dsk *DSKWrapper) PRODOSWrite(b int, data []byte) error {
 	for len(data) < 512 {
 		data = append(data, 0x00)
 	}
-
-	fmt.Printf("Write block %d:\n", b)
-	Dump(data)
 
 	t, s1, s2 := dsk.PRODOSGetBlockSectors(b)
 
@@ -1787,6 +1794,8 @@ func (dsk *DSKWrapper) PRODOSSetLocked(path, name string, lock bool) error {
 // PRODOSGetNamedEntry for a given path, will find the file descriptor with name
 func (dsk *DSKWrapper) PRODOSGetNamedEntry(path string, name string) (*ProDOSFileDescriptor, error) {
 
+	//fmt.Printf(">>> Path = %s\n", path)
+
 	vdh, blockList, blockData, err := dsk.PRODOSFindDirBlocks(2, path)
 	if err != nil {
 		return nil, err
@@ -1810,6 +1819,8 @@ func (dsk *DSKWrapper) PRODOSGetNamedEntry(path string, name string) (*ProDOSFil
 			fd.SetData(chunk, blockList[idx], offset)
 			fd.entryNum = entries
 
+			//fmt.Printf(">>> Comparing %s to %s\n", strings.ToLower(fd.NameUnadorned()), strings.ToLower(name))
+
 			if fd.GetStorageType() != 0x00 && strings.ToLower(fd.NameUnadorned()) == strings.ToLower(name) {
 				return fd, nil
 			}
@@ -1820,4 +1831,22 @@ func (dsk *DSKWrapper) PRODOSGetNamedEntry(path string, name string) (*ProDOSFil
 	}
 
 	return nil, errors.New("Not found")
+}
+
+func (dsk *DSKWrapper) PRODOSRenameFile(path, name, newname string) error {
+
+	fd, err := dsk.PRODOSGetNamedEntry(path, name)
+	if err != nil {
+		return err
+	}
+
+	_, err = dsk.PRODOSGetNamedEntry(path, newname)
+	if err == nil {
+		return errors.New("New name already exists")
+	}
+
+	// can rename here
+	fd.SetName(newname)
+	return fd.Publish(dsk)
+
 }

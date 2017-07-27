@@ -138,7 +138,8 @@ func main() {
 			os.Stderr.WriteString(err.Error())
 			os.Exit(2)
 		}
-		commandTarget = dsk
+		commandVolumes[0] = dsk
+		commandTarget = 0
 		switch {
 		case *fileExtract != "":
 			shellProcess("extract " + *fileExtract)

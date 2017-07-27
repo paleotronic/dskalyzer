@@ -12,7 +12,6 @@ import (
 	"encoding/hex"
 
 	"fmt"
-	"log"
 )
 
 //import "math/rand"
@@ -552,12 +551,12 @@ func (d *DSKWrapper) IsChanged() bool {
 
 // Read is a simple function to return the current pointed to sector
 func (d *DSKWrapper) Read() []byte {
-	//fmt.Printf("---> Reading track %d, sector %d\n", d.CurrentTrack, d.CurrentSector)
+	////fmt.Printf("---> Reading track %d, sector %d\n", d.CurrentTrack, d.CurrentSector)
 	return d.Data[d.SectorPointer : d.SectorPointer+256]
 }
 
 func (d *DSKWrapper) Write(data []byte) {
-	//fmt.Printf("---> Reading track %d, sector %d\n", d.CurrentTrack, d.CurrentSector)
+	////fmt.Printf("---> Reading track %d, sector %d\n", d.CurrentTrack, d.CurrentSector)
 	l := len(data)
 	if l > STD_BYTES_PER_SECTOR {
 		l = STD_BYTES_PER_SECTOR
@@ -677,7 +676,7 @@ func (dsk *DSKWrapper) Identify() {
 
 	is2MG, Format, Layout, zdsk := dsk.Is2MG()
 	if is2MG {
-		fmt.Println("repacked", len(zdsk.Data))
+		////fmt.Println("repacked", len(zdsk.Data))
 		dsk.SetData(zdsk.Data)
 		dsk.Layout = Layout
 		dsk.Format = Format
@@ -740,43 +739,41 @@ func (dsk *DSKWrapper) Identify() {
 
 	isAppleDOS, Format, Layout := dsk.IsAppleDOS()
 	if isAppleDOS {
-		fmt.Printf("Format: %s\n", Format.String())
+		////fmt.Printf("Format: %s\n", Format.String())
 		dsk.Format = Format
 		dsk.Layout = Layout
 		switch Layout {
 		case SectorOrderProDOS:
-			fmt.Println("Sector Order: ProDOS")
+			////fmt.Println("Sector Order: ProDOS")
 			dsk.CurrentSectorOrder = PRODOS_SECTOR_ORDER
 		case SectorOrderProDOSLinear:
-			fmt.Println("Sector Order: Linear")
+			////fmt.Println("Sector Order: Linear")
 			dsk.CurrentSectorOrder = LINEAR_SECTOR_ORDER
 		case SectorOrderDOS33:
-			fmt.Println("Sector Order: DOS33")
+			////fmt.Println("Sector Order: DOS33")
 			dsk.CurrentSectorOrder = DOS_33_SECTOR_ORDER
 		case SectorOrderDOS32:
-			fmt.Println("Sector Order: DOS32")
-			dsk.CurrentSectorOrder = DOS_32_SECTOR_ORDER
+			////fmt.Println("Sector Order: DOS32")
+			//dsk.CurrentSectorOrder = DOS_32_SECTOR_ORDER
 		case SectorOrderDOS33Alt:
-			fmt.Println("Sector Order: Alt Linear")
+			////fmt.Println("Sector Order: Alt Linear")
 			dsk.CurrentSectorOrder = LINEAR_SECTOR_ORDER
 		}
 		dsk.SetNibbles(dsk.Nibblize())
 		return
-	} else {
-		fmt.Println("Not apple dos")
 	}
 
 	fp := hex.EncodeToString(dsk.Data[:32])
 	if dfmt, ok := identity[fp]; ok {
 		dsk.Format = dfmt
-		fmt.Println(dsk.Format.String())
+		//fmt.Println(dsk.Format.String())
 	}
 
-	fmt.Printf("Disk name: %s\n", dsk.Filename)
+	//fmt.Printf("Disk name: %s\n", dsk.Filename)
 
 	// 1. NIB
 	if len(dsk.Data) == 232960 {
-		fmt.Println("THIS IS A NIB")
+		//fmt.Println("THIS IS A NIB")
 		dsk.Format = GetDiskFormat(DF_DOS_SECTORS_16)
 		dsk.SetNibbles(dsk.Data)
 		return
@@ -784,7 +781,7 @@ func (dsk *DSKWrapper) Identify() {
 
 	// 2. Wrong size
 	if len(dsk.Data) != STD_DISK_BYTES && len(dsk.Data) != STD_DISK_BYTES_OLD && len(dsk.Data) != PRODOS_800KB_DISK_BYTES {
-		fmt.Println("NOT STANDARD DISK")
+		//fmt.Println("NOT STANDARD DISK")
 		dsk.Format = GetDiskFormat(DF_NONE)
 		dsk.SetNibbles(make([]byte, 232960))
 		return
@@ -792,13 +789,13 @@ func (dsk *DSKWrapper) Identify() {
 
 	// 3. DOS 3x Disk
 	vtoc, e := dsk.AppleDOSGetVTOC()
-	fmt.Println(vtoc.GetTracks(), vtoc.GetSectors())
+	//fmt.Println(vtoc.GetTracks(), vtoc.GetSectors())
 	if e == nil && vtoc.GetTracks() == 35 {
 		//bps := vtoc.BytesPerSector()
 		t := vtoc.GetTracks()
 		s := vtoc.GetSectors()
 
-		fmt.Printf("DOS Tracks = %d, Sectors = %d\n", t, s)
+		//fmt.Printf("DOS Tracks = %d, Sectors = %d\n", t, s)
 
 		if t == 35 && s == 16 {
 			dsk.Layout = SectorOrderDOS33
@@ -814,7 +811,7 @@ func (dsk *DSKWrapper) Identify() {
 		return
 	}
 
-	fmt.Println("Trying prodos / pascal")
+	//fmt.Println("Trying prodos / pascal")
 
 	isPAS, volName := dsk.IsPascal()
 	if isPAS && volName != "" {
@@ -831,27 +828,27 @@ func (dsk *DSKWrapper) Identify() {
 		dsk.Format = GetDiskFormat(DF_PRODOS_800KB)
 	}
 
-	fmt.Println(dsk.Format.String())
+	//fmt.Println(dsk.Format.String())
 
 	switch dsk.Format.ID {
 
 	case DF_PRODOS:
 
 		vdh, e := dsk.PRODOSGetVDH(2)
-		//fmt.Printf("Blocks = %d\n", vdh.GetTotalBlocks())
+		////fmt.Printf("Blocks = %d\n", vdh.GetTotalBlocks())
 		if e == nil && vdh.GetStorageType() == 0xf && vdh.GetTotalBlocks() == 280 {
 			dsk.Format = GetDiskFormat(DF_PRODOS)
 			dsk.Layout = SectorOrderDOS33
 			dsk.CurrentSectorOrder = DOS_33_SECTOR_ORDER
 			dsk.SetNibbles(dsk.Nibblize())
 
-			fmt.Println("THIS IS A PRODOS DISKETTE, DOS Ordered")
+			//fmt.Println("THIS IS A PRODOS DISKETTE, DOS Ordered")
 			return
 		} else {
 			dsk.Format = GetDiskFormat(DF_PRODOS)
 			dsk.Layout = SectorOrderDOS33Alt
 
-			//fmt.Println("Try again")
+			////fmt.Println("Try again")
 
 			vdh, e = dsk.PRODOSGetVDH(2)
 
@@ -860,7 +857,7 @@ func (dsk *DSKWrapper) Identify() {
 				dsk.CurrentSectorOrder = PRODOS_SECTOR_ORDER
 				dsk.SetNibbles(dsk.Nibblize())
 
-				fmt.Println("THIS IS A PRODOS DISKETTE, ProDOS Ordered")
+				//fmt.Println("THIS IS A PRODOS DISKETTE, ProDOS Ordered")
 				return
 
 			}
@@ -869,7 +866,7 @@ func (dsk *DSKWrapper) Identify() {
 	case DF_PRODOS_800KB:
 
 		vdh, e := dsk.PRODOS800GetVDH(2)
-		fmt.Printf("Blocks = %d\n", vdh.GetTotalBlocks())
+		//fmt.Printf("Blocks = %d\n", vdh.GetTotalBlocks())
 		if e == nil && vdh.GetStorageType() == 0xf && vdh.GetTotalBlocks() == 1600 {
 			dsk.Format = GetDiskFormat(DF_PRODOS_800KB)
 			dsk.Layout = SectorOrderDOS33
@@ -877,7 +874,7 @@ func (dsk *DSKWrapper) Identify() {
 			//dsk.SetNibbles(dsk.nibblize())
 			dsk.SetNibbles(make([]byte, 232960))
 
-			fmt.Println("THIS IS A PRODOS DISKETTE, DOS Ordered")
+			//fmt.Println("THIS IS A PRODOS DISKETTE, DOS Ordered")
 			return
 		}
 
@@ -889,9 +886,9 @@ func (dsk *DSKWrapper) Identify() {
 		dsk.Layout = SectorOrderProDOS
 		dsk.CurrentSectorOrder = PRODOS_SECTOR_ORDER
 		dsk.SetNibbles(dsk.Nibblize())
-		fmt.Println("VTOC read failed, will nibblize anyway...")
+		//fmt.Println("VTOC read failed, will nibblize anyway...")
 	case DF_DOS_SECTORS_16:
-		fmt.Println("VTOC read failed, will nibblize anyway...")
+		//fmt.Println("VTOC read failed, will nibblize anyway...")
 		dsk.Layout = SectorOrderProDOS
 		dsk.CurrentSectorOrder = DOS_33_SECTOR_ORDER
 		dsk.Format = GetDiskFormat(DF_DOS_SECTORS_16)
@@ -1018,7 +1015,7 @@ func (d *DSKWrapper) NibbleOffsetToTS(offset int) (int, int) {
 
 func (d *DSKWrapper) nibblizeBlock(output io.Writer, track, sector int, nibbles []byte) {
 
-	log.Printf("NibblizeBlock(%d, %d)", track, sector)
+	//log.Printf("NibblizeBlock(%d, %d)", track, sector)
 
 	offset := ((track * SECTOR_COUNT) + sector) * 256
 	temp := make([]int, 342)

@@ -23,7 +23,7 @@ const (
 var AppleDOSTypeMap = map[FileType][2]string{
 	0x00: [2]string{"TXT", "ASCII Text"},
 	0x01: [2]string{"INT", "Integer Basic Program"},
-	0x02: [2]string{"APP", "Applesoft Basic Program"},
+	0x02: [2]string{"BAS", "Applesoft Basic Program"},
 	0x04: [2]string{"BIN", "Binary File"},
 	0x08: [2]string{"S", "S File Type"},
 	0x10: [2]string{"REL", "Relocatable Object Code"},
@@ -47,7 +47,7 @@ func AppleDOSFileTypeFromExt(ext string) FileType {
 			return ft
 		}
 	}
-	return 0x00
+	return 0x04
 }
 
 func (ft FileType) Ext() string {
@@ -57,7 +57,7 @@ func (ft FileType) Ext() string {
 		return info[0]
 	}
 
-	return "UNK"
+	return "BIN"
 }
 
 type FileDescriptor struct {
@@ -894,6 +894,8 @@ func (d *DSKWrapper) AppleDOSNamedCatalogEntry(name string) (*FileDescriptor, er
 
 func (dsk *DSKWrapper) AppleDOSWriteFile(name string, kind FileType, data []byte, loadAddr int) error {
 
+	name = strings.ToUpper(name)
+
 	vtoc, err := dsk.AppleDOSGetVTOC()
 	if err != nil {
 		return err
@@ -1111,6 +1113,24 @@ func (dsk *DSKWrapper) AppleDOSSetLocked(name string, lock bool) error {
 	}
 
 	fd.SetLocked(lock)
+	return fd.Publish(dsk)
+
+}
+
+func (dsk *DSKWrapper) AppleDOSRenameFile(name, newname string) error {
+
+	fd, err := dsk.AppleDOSNamedCatalogEntry(name)
+	if err != nil {
+		return err
+	}
+
+	_, err = dsk.AppleDOSNamedCatalogEntry(newname)
+	if err == nil {
+		return errors.New("New name already exists")
+	}
+
+	// can rename here
+	fd.SetName(newname)
 	return fd.Publish(dsk)
 
 }

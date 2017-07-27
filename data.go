@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"time"
 
 	"crypto/md5"
@@ -184,7 +185,14 @@ func (d Disk) GetFilename() string {
 
 	//	fmt.Printf("checksum: [%s] -> [%s]\n", d.Filename, hex.EncodeToString(sum[:]))
 
-	return fmt.Sprintf("%s/%d", strings.Trim(filepath.Dir(d.FullPath), "/"), d.FormatID.ID) + "_" + d.SHA256 + "_" + d.SHA256Active + "_" + hex.EncodeToString(sum[:]) + ".fgp"
+	ff := fmt.Sprintf("%s/%d", strings.Trim(filepath.Dir(d.FullPath), "/"), d.FormatID.ID) + "_" + d.SHA256 + "_" + d.SHA256Active + "_" + hex.EncodeToString(sum[:]) + ".fgp"
+
+	if runtime.GOOS == "windows" {
+		ff = strings.Replace(ff, ":", "", -1)
+		ff = strings.Replace(ff, "\\", "/", -1)
+	}
+
+	return ff
 
 }
 

@@ -33,7 +33,7 @@ func analyzeNONE(id int, dsk *disk.DSKWrapper, info *Disk) {
 
 	l.Logf("Assuming all sectors might be used")
 	info.Bitmap = make([]bool, info.Tracks*info.Sectors)
-	for i, _ := range info.Bitmap {
+	for i := range info.Bitmap {
 		info.Bitmap[i] = true
 	}
 
