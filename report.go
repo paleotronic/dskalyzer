@@ -95,7 +95,7 @@ func (dfc *DuplicateFileCollection) Report(filename string) {
 
 		if len(list) > 1 {
 
-			w.WriteString(fmt.Sprintf("Checksum %s duplicated %d times:\n", sha256, len(list)))
+			w.WriteString(fmt.Sprintf("\nChecksum %s duplicated %d times:\n", sha256, len(list)))
 			for i, v := range list {
 				w.WriteString(fmt.Sprintf(" %d) %s >> %s\n", i, v.Fullpath, v.Filename))
 			}

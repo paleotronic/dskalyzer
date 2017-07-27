@@ -1270,9 +1270,6 @@ func shellD2DCopy(args []string) int {
 			}
 			patternstr := m[0][3]
 			files, _ := globDisk(volume, patternstr)
-			for _, f := range files {
-				fmt.Printf("COPY %d :: %s -> %s\n", volume, f.Filename, target)
-			}
 			allfiles = append(allfiles, files...)
 		}
 	}
