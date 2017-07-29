@@ -1,7 +1,6 @@
 DSKalyzer is a cross-platform command-line tool for manipulating and managing Apple II DSK (and other) images. 
 
 Download from: https://github.com/paleotronic/dskalyzer/releases
-GitHub repository: https://github.com/paleotronic/dskalyzer
 
 Features include:
 
