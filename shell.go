@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"runtime/debug"
@@ -552,6 +553,23 @@ func init() {
 				"report <name> [<path>]",
 				"",
 				"Reports:",
+				"as-dupes       Active sector dupes report (-as-dupes at command line)",
+				"file-dupes     File dupes report (-file-dupes at command line)",
+				"whole-dupes    Whole disk dupes report (-whole-dupes at command line)",
+			},
+		},
+		"quarantine": &shellCommand{
+			Name:        "quarantine",
+			Description: "Like report, but allow moving dupes to a backup folder",
+			MinArgs:     1,
+			MaxArgs:     999,
+			Code:        shellQuarantine,
+			NeedsMount:  false,
+			Context:     sccDiskFile,
+			Text: []string{
+				"quarantine <name> [<path>]",
+				"",
+				"Scans:",
 				"as-dupes       Active sector dupes report (-as-dupes at command line)",
 				"file-dupes     File dupes report (-file-dupes at command line)",
 				"whole-dupes    Whole disk dupes report (-whole-dupes at command line)",
@@ -1492,4 +1510,184 @@ func shellReport(args []string) int {
 
 	return -1
 
+}
+
+func shellQuarantine(args []string) int {
+
+	switch args[0] {
+	case "as-dupes":
+		quarantineActiveDisks(args[1:])
+	case "whole-dupes":
+		quarantineWholeDisks(args[1:])
+	}
+
+	return -1
+
+}
+
+func moveFile(source, dest string) error {
+
+	source = strings.Replace(source, "\\", "/", -1)
+	dest = strings.Replace(dest, "\\", "/", -1)
+
+	fmt.Printf("Reading source file: %s\n", source)
+	data, err := ioutil.ReadFile(source)
+	if err != nil {
+		return err
+	}
+
+	// make sure dest dir actually exists
+	os.MkdirAll(filepath.Dir(dest), 0755)
+
+	fmt.Printf("Creating dest file: %s\n", dest)
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	f.Write(data)
+	f.Close()
+
+	err = os.Remove(source)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(source); err == nil {
+		fmt.Println(source + " not deleted!!")
+		return errors.New(source + " not deleted!!")
+	}
+
+	return nil
+}
+
+func quarantineActiveDisks(filter []string) {
+	dfc := &DuplicateActiveSectorDiskCollection{}
+	Aggregate(AggregateDuplicateActiveSectorDisks, dfc, filter)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for _, list := range dfc.data {
+
+		if len(list) == 1 {
+			continue
+		}
+
+	prompt:
+
+		fmt.Println("Which one to keep?")
+		fmt.Println("(0) Skip this...")
+		for i, v := range list {
+			fmt.Printf("(%d) %s\n", i+1, v.Fullpath)
+		}
+		fmt.Println()
+		fmt.Printf("Option (0-%d, q): ", len(list))
+		text, _ := reader.ReadString('\n')
+
+		text = strings.ToLower(strings.Trim(text, "\r\n"))
+
+		if text == "q" {
+			return
+		}
+
+		if text == "0" {
+			continue
+		}
+
+		tmp, _ := strconv.ParseInt(text, 10, 32)
+		idx := int(tmp) - 1
+
+		if idx < 0 || idx > len(list) {
+			goto prompt
+		}
+
+		for i, v := range list {
+			if i == idx {
+				continue
+			}
+			path := v.Fullpath
+			path = strings.Replace(path, ":", "", -1)
+			path = strings.Replace(path, "\\", "/", -1)
+
+			bpath := binpath() + "/quarantine/" + path
+			err := moveFile(v.Fullpath, bpath)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = moveFile(v.fingerprint, v.fingerprint+".q")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+		}
+
+	}
+}
+
+func quarantineWholeDisks(filter []string) {
+	dfc := &DuplicateWholeDiskCollection{}
+	Aggregate(AggregateDuplicateWholeDisks, dfc, filter)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for _, list := range dfc.data {
+
+		if len(list) == 1 {
+			continue
+		}
+
+	wprompt:
+
+		fmt.Println("Which one to keep?")
+		fmt.Println("(0) Skip this...")
+		for i, v := range list {
+			fmt.Printf("(%d) %s\n", i+1, v.Fullpath)
+		}
+		fmt.Println()
+		fmt.Printf("Option (0-%d, q): ", len(list))
+		text, _ := reader.ReadString('\n')
+
+		text = strings.ToLower(strings.Trim(text, "\r\n"))
+
+		if text == "q" {
+			return
+		}
+
+		if text == "0" {
+			continue
+		}
+
+		tmp, _ := strconv.ParseInt(text, 10, 32)
+		idx := int(tmp) - 1
+
+		if idx < 0 || idx > len(list) {
+			goto wprompt
+		}
+
+		for i, v := range list {
+			if i == idx {
+				continue
+			}
+			path := v.Fullpath
+			path = strings.Replace(path, ":", "", -1)
+			path = strings.Replace(path, "\\", "/", -1)
+
+			bpath := binpath() + "/quarantine/" + path
+			err := moveFile(v.Fullpath, bpath)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = moveFile(v.fingerprint, v.fingerprint+".q")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+		}
+
+	}
 }

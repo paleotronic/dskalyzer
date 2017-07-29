@@ -39,6 +39,7 @@ type Disk struct {
 	MatchFiles               map[*DiskFile]*DiskFile
 	MissingFiles, ExtraFiles []*DiskFile
 	IngestMode               int
+	source                   string
 }
 
 type ByMatchFactor []*Disk
@@ -235,6 +236,8 @@ func (d *Disk) ReadFromFile(filename string) error {
 
 	dec := gob.NewDecoder(f)
 	err = dec.Decode(d)
+
+	d.source = filename
 
 	return err
 }

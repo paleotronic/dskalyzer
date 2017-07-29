@@ -7,9 +7,10 @@ import (
 )
 
 type DuplicateSource struct {
-	Fullpath string
-	Filename string
-	GSHA     string
+	Fullpath    string
+	Filename    string
+	GSHA        string
+	fingerprint string
 }
 
 type DuplicateFileCollection struct {
@@ -25,7 +26,7 @@ type DuplicateActiveSectorDiskCollection struct {
 	data_as map[string][]DuplicateSource
 }
 
-func (dfc *DuplicateFileCollection) Add(checksum string, fullpath string, filename string) {
+func (dfc *DuplicateFileCollection) Add(checksum string, fullpath string, filename string, fgp string) {
 
 	if dfc.data == nil {
 		dfc.data = make(map[string][]DuplicateSource)
@@ -36,13 +37,13 @@ func (dfc *DuplicateFileCollection) Add(checksum string, fullpath string, filena
 		list = make([]DuplicateSource, 0)
 	}
 
-	list = append(list, DuplicateSource{Fullpath: fullpath, Filename: filename})
+	list = append(list, DuplicateSource{Fullpath: fullpath, Filename: filename, fingerprint: fgp})
 
 	dfc.data[checksum] = list
 
 }
 
-func (dfc *DuplicateWholeDiskCollection) Add(checksum string, fullpath string) {
+func (dfc *DuplicateWholeDiskCollection) Add(checksum string, fullpath string, fgp string) {
 
 	if dfc.data == nil {
 		dfc.data = make(map[string][]DuplicateSource)
@@ -53,13 +54,13 @@ func (dfc *DuplicateWholeDiskCollection) Add(checksum string, fullpath string) {
 		list = make([]DuplicateSource, 0)
 	}
 
-	list = append(list, DuplicateSource{Fullpath: fullpath})
+	list = append(list, DuplicateSource{Fullpath: fullpath, fingerprint: fgp})
 
 	dfc.data[checksum] = list
 
 }
 
-func (dfc *DuplicateActiveSectorDiskCollection) Add(checksum string, achecksum string, fullpath string) {
+func (dfc *DuplicateActiveSectorDiskCollection) Add(checksum string, achecksum string, fullpath string, fgp string) {
 
 	if dfc.data == nil {
 		dfc.data = make(map[string][]DuplicateSource)
@@ -70,7 +71,7 @@ func (dfc *DuplicateActiveSectorDiskCollection) Add(checksum string, achecksum s
 		list = make([]DuplicateSource, 0)
 	}
 
-	list = append(list, DuplicateSource{Fullpath: fullpath, GSHA: checksum})
+	list = append(list, DuplicateSource{Fullpath: fullpath, GSHA: checksum, fingerprint: fgp})
 
 	dfc.data[achecksum] = list
 
@@ -110,7 +111,7 @@ func AggregateDuplicateFiles(d *Disk, collection interface{}) {
 
 	for _, f := range d.Files {
 
-		collection.(*DuplicateFileCollection).Add(f.SHA256, d.FullPath, f.Filename)
+		collection.(*DuplicateFileCollection).Add(f.SHA256, d.FullPath, f.Filename, d.source)
 
 	}
 
@@ -118,13 +119,13 @@ func AggregateDuplicateFiles(d *Disk, collection interface{}) {
 
 func AggregateDuplicateWholeDisks(d *Disk, collection interface{}) {
 
-	collection.(*DuplicateWholeDiskCollection).Add(d.SHA256, d.FullPath)
+	collection.(*DuplicateWholeDiskCollection).Add(d.SHA256, d.FullPath, d.source)
 
 }
 
 func AggregateDuplicateActiveSectorDisks(d *Disk, collection interface{}) {
 
-	collection.(*DuplicateActiveSectorDiskCollection).Add(d.SHA256, d.SHA256Active, d.FullPath)
+	collection.(*DuplicateActiveSectorDiskCollection).Add(d.SHA256, d.SHA256Active, d.FullPath, d.source)
 
 }
 

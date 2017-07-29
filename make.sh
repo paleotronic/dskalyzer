@@ -22,7 +22,7 @@ for arch in `echo $ARCHES`; do
 	go build -o "$EXENAME" .
 	if [ "$?" == "0" ]; then
 		echo "Zipping -> $ZIPNAME"
-		zip "$ZIPNAME" "$EXENAME" "LICENSE" "README.md"
+		zip "$ZIPNAME" "$EXENAME" "LICENSE" "README.md" "USAGE.md"
 	else
 		exit 2
 	fi

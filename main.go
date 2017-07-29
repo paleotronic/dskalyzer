@@ -110,6 +110,7 @@ var filePut = flag.String("file-put", "", "File to put on disk (-with-disk)")
 var fileDelete = flag.String("file-delete", "", "File to delete (-with-disk)")
 var fileMkdir = flag.String("dir-create", "", "Directory to create (-with-disk)")
 var fileCatalog = flag.Bool("catalog", false, "List disk contents (-with-disk)")
+var quarantine = flag.Bool("quarantine", false, "Run -as-dupes and -whole-disk in quarantine mode")
 
 func main() {
 
@@ -286,12 +287,20 @@ func main() {
 	}
 
 	if *wholeDupes {
-		wholeDupeReport(filterpath)
+		if *quarantine {
+			quarantineWholeDisks(filterpath)
+		} else {
+			wholeDupeReport(filterpath)
+		}
 		os.Exit(0)
 	}
 
 	if *activeDupes {
-		activeDupeReport(filterpath)
+		if *quarantine {
+			quarantineActiveDisks(filterpath)
+		} else {
+			activeDupeReport(filterpath)
+		}
 		os.Exit(0)
 	}
 
