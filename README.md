@@ -1,5 +1,19 @@
 # dskalyzer
-DSKalyzer Apple II disk management tool
+DSKalyzer is a cross-platform command-line tool for manipulating and managing Apple II DSK (and other) images. 
+
+Features include:
+
+- Read from ProDOS, DOS 3.X, RDOS and Pascal disk images; 
+- ProDOS or DOS ordered; 2MG and NIB; 113-800K
+- Write to Prodos and DOS 3.3 disk images;
+- Extract and convert binary, text and detokenize BASIC files (Integer and Applesoft);
+- Write binary, text and retokenized BASIC (Applesoft) files back to disk images;
+- Copy and move files between disk images; delete files, create new folders (ProDOS), etc;
+- Generate disk reports that provide track and sector information, text extraction and more;
+- Use command-line flags for automation or an interactive shell;
+- Compare multiple disks to determine duplication, or search disks for text or filenames.
+- Builds for MacOS, Windows, Linux, FreeBSD and Raspberry Pi.
+- Open source; GPLv3 licensed.
 
 DSKalyzer is a command line tool for analyzing and managing Apple II DSK images and their archives. Its features include not only the standard set of disk manipulation tools -- extract (with text conversion), import to disk (including tokenisation of Applesoft BASIC), delete, and so forth -- but also the ability to identify duplicates — complete, active sector, and subset; find file, sector and other commonalities between disks (including as a percentage of similarity or difference); search de-tokenized BASIC, text and binary / sector data; generate reports identifying and / or collating disk type, DOS, geometry, size, and so forth; allowing for easier, semi-automated DSK archival management and research. 
 
