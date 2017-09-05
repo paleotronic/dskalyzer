@@ -558,6 +558,23 @@ func init() {
 				"whole-dupes    Whole disk dupes report (-whole-dupes at command line)",
 			},
 		},
+		"search": &shellCommand{
+			Name:        "search",
+			Description: "Run a search",
+			MinArgs:     1,
+			MaxArgs:     999,
+			Code:        shellSearch,
+			NeedsMount:  false,
+			Context:     sccDiskFile,
+			Text: []string{
+				"search <type> [<path>]",
+				"",
+				"Searches:",
+				"filename       Search by filename",
+				"text           Search for files containing tex",
+				"hash           Search for files with hash",
+			},
+		},
 		"quarantine": &shellCommand{
 			Name:        "quarantine",
 			Description: "Like report, but allow moving dupes to a backup folder",
@@ -637,6 +654,7 @@ func shellDo(dsk *disk.DSKWrapper) {
 		AutoComplete:           ac,
 	})
 	if err != nil {
+		//fmt.Println("Error rl:", err)
 		os.Exit(2)
 	}
 	defer rl.Close()
@@ -646,11 +664,13 @@ func shellDo(dsk *disk.DSKWrapper) {
 	for running {
 		line, err := rl.Readline()
 		if err != nil {
+			//fmt.Println("Error:", err)
 			break
 		}
 
 		r := shellProcess(line)
 		if r == 999 {
+			//fmt.Println("exit 999")
 			return
 		}
 
@@ -1135,6 +1155,8 @@ func shellDelete(args []string) int {
 
 func shellIngest(args []string) int {
 
+	processed = 0
+
 	dskName := args[0]
 
 	info, err := os.Stat(dskName)
@@ -1506,6 +1528,23 @@ func shellReport(args []string) int {
 		fileDupeReport(args[1:])
 	case "whole-dupes":
 		wholeDupeReport(args[1:])
+	}
+
+	return -1
+
+}
+
+func shellSearch(args []string) int {
+
+	switch args[0] {
+	case "text":
+		//activeDupeReport(args[1:])
+		searchForTEXT(args[1], args[2:])
+	case "filename":
+		//fileDupeReport(args[1:])
+		searchForFilename(args[1], args[2:])
+	case "hash":
+		searchForSHA256(args[1], args[2:])
 	}
 
 	return -1

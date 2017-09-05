@@ -176,7 +176,7 @@ func ExtractFile(diskname string, fd *DiskFile, adorned bool, local bool) error 
 	f.Write(fd.Data)
 	os.Stderr.WriteString("Extracted file to " + path + "/" + name + "\n")
 
-	if strings.ToLower(fd.Ext) == "int" || strings.ToLower(fd.Ext) == "app" || strings.ToLower(fd.Ext) == "txt" {
+	if strings.ToLower(fd.Ext) == "int" || strings.ToLower(fd.Ext) == "bas" || strings.ToLower(fd.Ext) == "txt" {
 		f, err := os.Create(path + "/" + name + ".ASC")
 		if err != nil {
 			return err
